@@ -8,7 +8,6 @@ import cv2
 import numpy as np
 from mediapipe.framework.formats import landmark_pb2
 import json
-from ultralytics import YOLO
 from scipy.spatial.distance import cosine
 from mediapipe.python.solutions import hands
 from twilio.rest import Client
