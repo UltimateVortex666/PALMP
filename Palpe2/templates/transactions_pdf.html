@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction History PDF</title>
+    <style>
+        body, .amount-cell, th, td {
+            font-family: 'DejaVuSans', sans-serif;
+        }
+        .company-header { text-align: center; margin-bottom: 8px; }
+        .company-logo { width: 80px; height: auto; margin-bottom: 8px; }
+        .company-name { font-size: 1.7em; font-weight: bold; letter-spacing: 2px; margin-bottom: 8px; }
+        .info-box {
+            float: right;
+            background: #f5f7fa;
+            border: 1.5px solid #bfc9d1;
+            border-radius: 10px;
+            padding: 14px 22px;
+            margin-top: -70px;
+            margin-bottom: 18px;
+            min-width: 220px;
+            font-size: 1em;
+        }
+        .info-label { color: #555; font-weight: bold; }
+        .info-value { margin-left: 6px; }
+        h2 { text-align: center; margin: 30px 0 18px 0; font-size: 1.3em; letter-spacing: 1px; }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
+            font-size: 1em;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 12px 10px;
+            font-size: 1em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        th {
+            background: #e9ecf3;
+            color: #222;
+            font-size: 1.08em;
+            font-weight: 700;
+            border-bottom: 2px solid #bfc9d1;
+            text-align: center;
+        }
+        td {
+            border-bottom: 1px solid #e3e6eb;
+            text-align: center;
+        }
+        td.amount-cell {
+            text-align: right;
+            color: #1a8a34;
+            font-weight: bold;
+            min-width: 90px;
+        }
+        td.desc-cell {
+            text-align: left;
+        }
+        tr:nth-child(even) td {
+            background: #f7f9fb;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        table, th, td {
+            border: none;
+        }
+        .total-row td {
+            background: #f0f4fa;
+            font-weight: bold;
+            font-size: 1.08em;
+            border-top: 2px solid #bfc9d1;
+            text-align: center;
+        }
+        .total-row td.amount-cell {
+            text-align: right;
+        }
+        th.date, td.date { width: 18%; text-align: center; }
+        th.type, td.type { width: 14%; text-align: center; }
+        th.amount, td.amount-cell { width: 16%; text-align: right; color: #1a8a34; font-weight: bold; min-width: 90px; }
+        th.name, td.name { width: 20%; text-align: center; }
+        th.desc, td.desc-cell { width: 32%; text-align: left; }
+        .type-payment { color: #d32f2f; font-weight: bold; }
+        .type-default { color: #222; font-weight: bold; }
+        .text-red {
+    color: red;
+    font-weight: bold;
+}
+
+.text-green {
+    color: green;
+    font-weight: bold;
+}
+
+    </style>
+</head>
+<body>
+    <div class="company-header">
+        <img src="data:image/png;base64,{{ logo_base64 }}" class="company-logo" alt="PALMP Logo"/>
+        <div class="company-name">PALMP</div>
+    </div>
+    {% if user_type == 'user' %}
+    <div class="info-box">
+        <div><span class="info-label">User Name:</span><span class="info-value">{{ user_info.full_name }}</span></div>
+        <div><span class="info-label">Phone:</span><span class="info-value">{{ user_info.phone_number }}</span></div>
+    </div>
+    {% else %}
+    <div class="info-box">
+        <div><span class="info-label">Merchant Name:</span><span class="info-value">{{ merchant_info.business_name }}</span></div>
+        <div><span class="info-label">License:</span><span class="info-value">{{ merchant_info.business_license }}</span></div>
+        <div><span class="info-label">Phone:</span><span class="info-value">{{ merchant_info.phone_number }}</span></div>
+    </div>
+    {% endif %}
+    <div style="clear: both;"></div>
+    <h2>Transaction History</h2>
+    <table>
+        <thead>
+            <tr>
+                <th class="date">Date</th>
+                <th class="type">Type</th>
+                <th class="amount">Amount</th>
+                {% if user_type == 'user' %}
+                <th class="name">Merchant Name</th>
+                {% else %}
+                <th class="name">User Name</th>
+                {% endif %}
+                <th class="desc">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if user_type == 'user' %}
+        {% set ns = namespace(total=0) %}
+        {% for t in transactions %}
+            {% set is_outgoing = t[1] == 'PAYMENT' and t[2] == user_id %}
+            {% set amount = (t[6] * -1) if is_outgoing else t[6] %}
+            {% set ns.total = ns.total + amount %}
+            <tr>
+                <td class="date">{{ t[8] }}</td>
+                <td class="type">{{ t[1] }}</td>
+                <td class="amount-cell {% if t[1] == 'PAYMENT' %}text-red{% else %}text-green{% endif %}">
+                                    Rs.{{ '%.2f' % (amount | abs) }}
+                        </td>
+                <td class="name">{{ t[9] }}</td>
+                <td class="desc-cell">{{ t[7] }}</td>
+            </tr>
+        {% endfor %}
+        {% else %}
+        {% for t in transactions %}
+            <tr>
+                <td class="date">{{ t[8] }}</td>
+                <td class="type">{{ t[1] }}</td>
+                <td class="amount-cell">Rs.{{ '%.2f' % t[6] }}</td>
+                <td class="name">{{ t[9] }}</td>
+                <td class="desc-cell">{{ t[7] }}</td>
+            </tr>
+        {% endfor %}
+        {% endif %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="2"></td>
+                {% if user_type == 'user' %}
+                <td class="amount-cell" style="text-align:right; font-weight:bold;">Total:&nbsp;&nbsp;<span style="color:#1a8a34; font-weight:bold;">Rs.{{ '%.2f' % ns.total }}</span></td>
+                {% else %}
+                <td class="amount-cell" style="text-align:right; font-weight:bold;">Total:&nbsp;&nbsp;<span style="color:#1a8a34; font-weight:bold;">Rs.{{ '%.2f' % (transactions|map(attribute=6)|sum) }}</span></td>
+                {% endif %}
+                <td class="name"></td>
+                <td class="desc-cell"></td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html> 

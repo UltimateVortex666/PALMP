@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login - Palm Wallet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <style>
+.logo-img {
+    height: 56px;
+    width: 56px;
+    margin: 0 auto 18px auto;
+    display: block;
+}
+</style>
+    <div class="container">
+        <img src="{{ url_for('static', filename='CO.png') }}" alt="Palm Logo" class="logo-img">
+        <div class="header">
+            <h1>Palm Wallet</h1>
+            <p>Welcome back! Login to access your palm wallet</p>
+        </div>
+
+        <div class="nav">
+            <a href="{{ url_for('user_signup') }}">Signup</a>
+            <a href="{{ url_for('merchant_signup') }}">Merchant Signup</a>
+            <a href="{{ url_for('merchant_login') }}">Merchant Login</a>
+        </div>
+
+        <div class="card">
+            <h2>User Login</h2>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/user/login">
+                <div class="form-group">
+                    <label for="phone_number">Phone Number:</label>
+                    <input type="tel" id="phone_number" name="phone_number" class="form-control" 
+                           placeholder="Enter your phone number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="otp">OTP:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="otp" name="otp" class="form-control" 
+                               placeholder="Enter OTP" required style="flex: 1;">
+                        <button type="button" class="btn btn-secondary otp-btn" id="user-otp-btn">Send OTP</button>
+                    </div>
+                    <small style="color: #6c757d; margin-top: 5px; display: block;">
+                        Click "Send OTP" to receive OTP on your phone.
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <p>Don't have an account? <a href="{{ url_for('user_signup') }}" style="color: #667eea;">Sign up here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

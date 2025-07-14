@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Palm Wallet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .quick-amount-btn {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 24px;
+            padding: 8px 22px;
+            font-size: 1.1em;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            outline: none;
+        }
+        .quick-amount-btn:hover, .quick-amount-btn:focus {
+            background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px) scale(1.07);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.18);
+        }
+        .quick-amount-btn:active {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: scale(0.97);
+        }
+        .logo-img {
+            height: 56px;
+            width: 56px;
+            margin: 0 auto 18px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='CO.png') }}" alt="Palm Logo" class="logo-img">
+            <h1 style="display: inline-block; vertical-align: middle; margin: 0;"> Palm Wallet</h1>
+            <p>Welcome, {{ user[2] }}! Manage your palm wallet</p>
+        </div>
+
+        <div class="nav">
+            <a href="/user/dashboard">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+
+        <div class="dashboard-header">
+            <h2>Your Palm Wallet</h2>
+            <div>
+                <span class="status-badge status-success">Active</span>
+            </div>
+        </div>
+
+        <!-- Wallet Card -->
+        <div class="wallet-card">
+            <h2>Current Balance</h2>
+            <div class="wallet-balance">₹{{ "%.2f"|format(user[4]) }}</div>
+            <p>Your palm wallet is ready for payments</p>
+        </div>
+
+        <!-- Add Money Section -->
+        <div class="card">
+            <h3>Add Money to Wallet</h3>
+            <div class="form-group">
+                <label for="amount">Amount (₹):</label>
+                
+                <input type="number" id="amount" class="form-control" 
+                       placeholder="Enter amount to add" step="0.01" min="0.01" style="margin-bottom: 16px;">
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <button type="button" class="quick-amount-btn" data-amount="10">₹10</button>
+                        <button type="button" class="quick-amount-btn" data-amount="100">₹100</button>
+                        <button type="button" class="quick-amount-btn" data-amount="500">₹500</button>
+                        <button type="button" class="quick-amount-btn" data-amount="1000">₹1000</button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 10px; display: flex; gap: 8px;">
+                <button type="button" id="send-otp-btn" class="btn btn-primary">Send OTP</button>
+                <input type="text" id="otp" class="form-control" placeholder="Enter OTP" style="max-width: 120px; display: none;">
+            </div>
+            <button type="button" id="add-money-btn" class="btn btn-success" disabled>Add Money</button>
+            <small style="color: #6c757d; margin-top: 10px; display: block;">
+                 This simulates adding money via OTP.
+            </small>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">Transaction History</h3>
+                <a href="/user/download_transactions" class="btn btn-secondary">Download All as PDF</a>
+            </div>
+            {% if transactions %}
+                <div class="transaction-list">
+                    {% for transaction in transactions %}
+                        {% set is_outgoing = transaction[1] == 'PAYMENT' and transaction[2] == user[0] %}
+                        {% set amount = (transaction[6] * -1) if is_outgoing else transaction[6] %}
+                        <div class="transaction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #eee;">
+                            <div style="flex: 1;">
+                                <div class="transaction-description" style="font-weight: 500; margin-bottom: 2px;">
+                                    {% if transaction[1] == 'DEPOSIT' %}
+                                        <span style="font-size: 1.2em;"></span> <span>Added money to Self</span>
+                                    {% elif transaction[1] == 'PAYMENT' %}
+                                        <span style="font-size: 1.2em;"></span> Payment to Merchant: <b>{{ transaction[9] }}</b>
+                                    {% else %}
+                                        {{ transaction[1] }}
+                                    {% endif %}
+                                </div>
+                                <div class="transaction-date" style="color: #6c757d; font-size: 0.95em;">{{ transaction[8] }}</div>
+                            </div>
+                            <div class="transaction-amount {% if amount > 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                ₹{{ "%.2f"|format(amount if amount is not none else 0.0) }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="text-align: center; color: #6c757d; padding: 20px;">
+                    No transactions yet. Add money to get started!
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- User Info -->
+        <div class="card">
+            <h3>Account Information</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <strong>Name:</strong> {{ user[2] }}
+                </div>
+                <div>
+                    <strong>Phone:</strong> {{ user[1] }}
+                </div>
+                <div>
+                    <strong>Member Since:</strong> {{ user[5] }}
+                </div>
+                <div>
+                    <strong>Palm Image:</strong> 
+                    {% if user[3] %}
+                        <span class="status-badge status-success">Uploaded</span>
+                    {% else %}
+                        <span class="status-badge status-failed">Not Uploaded</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        window.userPhoneNumber = "{{ user[1] }}";
+    </script>
+</body>
+</html>

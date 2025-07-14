@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Signup - Palm Wallet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- MediaPipe Hands for AI palm detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248252/drawing_utils.js"></script>
+</head>
+<body>
+    <style>
+.logo-img {
+    height: 56px;
+    width: 56px;
+    margin: 0 auto 18px auto;
+    display: block;
+}
+</style>
+    <div class="container">
+        <img src="{{ url_for('static', filename='CO.png') }}" alt="Palm Logo" class="logo-img">
+        <div class="header">
+            <h1>Palm Wallet</h1>
+            <p>Create your account to start using palm-based payments</p>
+        </div>
+
+        <div class="nav">
+            <a href="{{ url_for('user_login') }}">Login</a>
+            <a href="{{ url_for('merchant_signup') }}">Merchant Signup</a>
+            <a href="{{ url_for('merchant_login') }}">Merchant Login</a>
+        </div>
+
+        <div class="card">
+            <h2>User Registration</h2>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data" id="signup-form">
+                <div class="form-group">
+                    <label for="phone_number">Phone Number:</label>
+                    <input type="tel" id="phone_number" name="phone_number" class="form-control" 
+                           placeholder="Enter your phone number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name">Full Name:</label>
+                    <input type="text" id="full_name" name="full_name" class="form-control" 
+                           placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="palm_capture">Palm Capture with AI Detection:</label>
+                    <div class="palm-capture-container">
+                        <!-- Camera preview -->
+                        <div class="camera-preview">
+                            <video id="camera-preview" autoplay muted playsinline style="width: 100%; max-width: 400px; border-radius: 8px;"></video>
+                            <canvas id="palm-canvas" style="position: absolute; top: 0; left: 0; width: 100%; max-width: 400px;"></canvas>
+                        </div>
+                        
+                        <!-- Capture controls -->
+                        <div class="capture-controls">
+                            <button type="button" id="start-camera-btn" class="btn btn-primary">Start Camera</button>
+                            <button type="button" id="capture-palm-btn" class="btn btn-success" style="display: none;">Capture Palm</button>
+                            <button type="button" id="retake-palm-btn" class="btn btn-secondary" style="display: none;">Retake</button>
+                        </div>
+                        
+                        <!-- Status and preview -->
+                        <div class="palm-status">
+                            <div id="palm-status-text">Click "Start Camera" to begin palm capture</div>
+                            <img id="captured-palm-preview" src="" alt="Captured palm" style="display: none; max-width: 200px; margin-top: 10px; border-radius: 8px;">
+                        </div>
+                        
+                        <!-- Hidden file input for form submission -->
+                        <input type="file" id="palm_image" name="palm_image" accept="image/*" style="display: none;" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <p>Already have an account? <a href="{{ url_for('user_login') }}" style="color: #667eea;">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/palm-detection.js') }}"></script>
+</body>
+</html>

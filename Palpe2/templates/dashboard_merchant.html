@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Dashboard - Palm Wallet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <style>
+        .logo-img {
+            height: 56px;
+            width: 56px;
+            margin: 0 auto 18px auto;
+            display: block;
+        }
+        </style>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='CO.png') }}" alt="Palm Logo" class="logo-img">
+            <h1 style="display: inline-block; vertical-align: middle; margin: 0;"> Merchant Dashboard</h1>
+            <p>Welcome, {{ merchant[2] }}! Manage your merchant wallet</p>
+        </div>
+
+        <div class="nav">
+            <a href="/merchant/dashboard">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+
+        <div class="dashboard-header">
+            <h2>Business Dashboard</h2>
+            <div>
+                <span class="status-badge status-success">Active</span>
+            </div>
+        </div>
+
+        <!-- Wallet Card -->
+        <div class="wallet-card">
+            <h2>Business Wallet Balance</h2>
+            <div class="wallet-balance">₹{{ "%.2f"|format(merchant[5]) }}</div>
+            <p>Ready to accept palm-based payments</p>
+        </div>
+
+        <!-- Create Payment Request -->
+        <div class="card">
+            <h3>Create Payment Request</h3>
+            <div class="form-group">
+                <label for="payment-amount">Amount (₹):</label>
+                <input type="number" id="payment-amount" class="form-control" 
+                       placeholder="Enter payment amount" step="0.01" min="0.01">
+            </div>
+            <div class="form-group">
+                <label for="payment-note">Payment Note:</label>
+                <textarea id="payment-note" class="form-control" 
+                          placeholder="Enter payment description (e.g., 'Coffee purchase')" rows="3"></textarea>
+            </div>
+            <button type="button" id="create-payment-btn" class="btn btn-primary">Create Payment Request</button>
+            <small style="color: #6c757d; margin-top: 10px; display: block;">
+                 This will create a payment request and trigger palm scan simulation
+            </small>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">Transaction History</h3>
+                <a href="/merchant/download_transactions" class="btn btn-secondary">Download All as PDF</a>
+            </div>
+            {% if transactions %}
+                <div class="transaction-list">
+                    {% for transaction in transactions %}
+                        <div class="transaction-item" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid #eee;">
+                            <div style="flex: 1;">
+                                <div class="transaction-description" style="font-weight: 500; margin-bottom: 2px;">
+                                    {% if transaction[1] == 'PAYMENT' %}
+                                        <span style="font-size: 1.2em;"></span> Payment Received from <b>{{ transaction[9] }}</b>
+                                    {% else %}
+                                        {{ transaction[1] }}
+                                    {% endif %}
+                                    {% if transaction[7] %}
+                                        - {{ transaction[7] }}
+                                    {% endif %}
+                                </div>
+                                <div class="transaction-date" style="color: #6c757d; font-size: 0.95em;">{{ transaction[8] }}</div>
+                            </div>
+                            <div class="transaction-amount" style="font-weight: bold; font-size: 1.15em; min-width: 90px; text-align: right; color: #28a745;">
+                                {% set amount = transaction[6] if transaction[6] is not none else 0.0 %}
+                                ₹{{ "%.2f"|format(amount) }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="text-align: center; color: #6c757d; padding: 20px;">
+                    No transactions yet. Create a payment request to get started!
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- Business Info -->
+        <div class="card">
+            <h3>Business Information</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <strong>Business Name:</strong> {{ merchant[2] }}
+                </div>
+                <div>
+                    <strong>Phone:</strong> {{ merchant[1] }}
+                </div>
+                <div>
+                    <strong>Address:</strong> {{ merchant[3] }}
+                </div>
+                <div>
+                    <strong>License:</strong> {{ merchant[4] }}
+                </div>
+                <div>
+                    <strong>Member Since:</strong> {{ merchant[6] }}
+                </div>
+                <div>
+                    <strong>Status:</strong> 
+                    <span class="status-badge status-success">Verified</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

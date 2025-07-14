@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Scan - Palm Wallet</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='CO.png') }}" alt="Palm Logo" class="logo-img">
+        <div class="header">
+            <h1> Palm Wallet</h1>
+            <p>Process payment using palm scan technology</p>
+        </div>
+
+        <div class="nav">
+            <a href="{{ url_for('merchant_dashboard') }}">Back to Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+
+        <!-- Payment Details -->
+        <div class="card">
+            <h2>Payment Request Details</h2>
+            <div class="payment-amount">
+                ₹{{ "%.2f"|format(payment_request.amount) }}
+            </div>
+            <p style="text-align: center; color: #6c757d;">
+                {{ payment_request.note }}
+            </p>
+        </div>
+
+        <!-- Palm Scan Area -->
+        <div class="palm-scan-container">
+            <div class="palm-scan-area" style="text-align:center;">
+                <div class="palm-scan-icon" style="font-size:3.5em; margin-bottom:10px; animation: wave 1.2s infinite alternate;">🤚</div>
+                <div class="palm-scan-text" style="font-size:1.5em; font-weight:600; color:#fff; margin-bottom:8px;">Ready to scan palm</div>
+                <p style="color: #f3f3f3; margin-top: 10px; font-size:1.15em; font-weight:500; margin-bottom:18px; text-shadow:0 1px 4px #0008;">
+                    <span style="background:rgba(80,80,180,0.12); padding:4px 12px; border-radius:8px;">Enter the user's phone number and scan their palm for verification</span>
+                </p>
+                <label for="phoneInput" style="display:block; color:#fff; font-size:1.1em; font-weight:500; margin-bottom:6px;">User Phone Number</label>
+                <input type="text" id="phoneInput" placeholder="Enter User Phone Number" maxlength="15" style="padding:12px; font-size:1.2em; border-radius:8px; border:2px solid #a3a3ff; margin-bottom:18px; width:260px; outline:none; transition: border-color 0.2s; box-shadow:0 2px 8px #0001; text-align:center;" onfocus="this.style.borderColor='#5e35b1'" onblur="this.style.borderColor='#a3a3ff'">
+                <br>
+                <video id="video" width="320" height="240" autoplay style="border-radius:12px; border:2px solid #a3a3ff;"></video>
+                <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+                <br>
+                <button type="button" id="scanBtn" class="btn btn-primary" style="margin-top: 20px; font-size:1.1em; padding:10px 28px;">Scan Palm</button>
+                <div id="scanStatus" style="margin-top:14px;font-weight:bold;font-size:1.1em;"></div>
+            </div>
+        </div>
+
+        <!-- Add this inside the main scan area, above the palm canvas -->
+        <div id="scan-line" style="display:none; position:absolute; left:0; right:0; height:4px; background:linear-gradient(90deg, #00ff00 0%, #00ff00 100%); opacity:0.7; z-index:10;"></div>
+
+        <!-- Instructions -->
+        <div class="card">
+            <h3>How it works</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <h4>1. Scan Palm</h4>
+                    <p>User places their palm over the scanner for biometric verification</p>
+                </div>
+                <div>
+                    <h4>2. Verify Identity</h4>
+                    <p>System matches palm print with registered user database</p>
+                </div>
+                <div>
+                    <h4>3. Process Payment</h4>
+                    <p>Automatically deducts amount from user's wallet to merchant</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="card">
+            <h3>Security Features</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px 0; border-bottom: 1px solid #e1e5e9;">
+                     Biometric authentication using palm vein patterns
+                </li>
+                <li style="padding: 10px 0; border-bottom: 1px solid #e1e5e9;">
+                     Encrypted transaction processing
+                </li>
+                <li style="padding: 10px 0; border-bottom: 1px solid #e1e5e9;">
+                     Real-time balance verification
+                </li>
+                <li style="padding: 10px 0;">
+                     Complete transaction audit trail
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/palm-detection.js') }}"></script>
+    <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const scanBtn = document.getElementById('scanBtn');
+    const scanStatus = document.getElementById('scanStatus');
+    const phoneInput = document.getElementById('phoneInput');
+
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => { scanStatus.textContent = "Camera access denied!"; scanStatus.style.color = '#d32f2f'; });
+
+    // Scan palm and process payment
+    scanBtn.onclick = function() {
+      scanStatus.textContent = "Scanning palm and processing payment...";
+      scanStatus.style.color = '#222';
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        if (!phoneInput.value) {
+          scanStatus.textContent = "Please enter phone number first.";
+          scanStatus.style.color = '#d32f2f';
+          return;
+        }
+        const formData = new FormData();
+        formData.append('scanned_palm_image', blob, 'scan.jpg');
+        formData.append('phone_number', phoneInput.value);
+        fetch('/payment/process', { method: 'POST', body: formData })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              scanStatus.textContent = data.message;
+              scanStatus.style.color = '#388e3c';
+              setTimeout(() => { window.location.href = '/merchant/dashboard'; }, 2000);
+            } else {
+              scanStatus.textContent = data.error || "Payment failed.";
+              scanStatus.style.color = '#d32f2f';
+            }
+          })
+          .catch(() => { scanStatus.textContent = "Error processing payment."; scanStatus.style.color = '#d32f2f'; });
+      }, 'image/jpeg');
+    };
+    </script>
+
+    <style>
+    @keyframes wave {
+      0% { transform: rotate(-10deg); }
+      100% { transform: rotate(10deg); }
+    }
+    .logo-img {
+        height: 56px;
+        width: 56px;
+        margin: 0 auto 18px auto;
+        display: block;
+    }
+    </style>
+</body>
+</html>
