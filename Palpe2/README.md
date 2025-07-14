@@ -5,7 +5,7 @@ A modern palm-based payment system built with Flask, SQLite3, and HTML5/CSS3/Jav
 ## 🚀 Features
 
 ### User Interface
-- ✅ Phone number-based Signup/Login (via OTP simulation)
+- ✅ Phone number-based Signup/Login (via OTP via SMS)
 - ✅ Register full name & phone number
 - ✅ **AI Palm Detection & Capture** (using MediaPipe Hands)
 - ✅ Show static Palm Wallet with balance
